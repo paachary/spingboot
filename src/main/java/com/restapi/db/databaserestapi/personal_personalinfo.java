@@ -1,9 +1,16 @@
 package com.restapi.db.databaserestapi;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.sun.jndi.cosnaming.IiopUrl;
+import jdk.nashorn.api.scripting.JSObject;
+
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity // This tells Hibernate to make a table out of this class
-
 public class personal_personalinfo {
 
         @Id
@@ -15,12 +22,23 @@ public class personal_personalinfo {
         private String firstName;
         private String middleName;
         private String emailid;
+
         private String gender;
         private Integer age;
 
+        @OneToMany(fetch = FetchType.EAGER, mappedBy = "personalinfo", cascade = CascadeType.ALL)
+        @JsonManagedReference
+        private Set<AddressInfo> addresses;
+
+        @OneToMany(fetch = FetchType.EAGER, mappedBy = "personalinfo", cascade = CascadeType.ALL)
+        @JsonManagedReference
+        private Set<BankMembership> bankMembershipDtls;
+
         public personal_personalinfo(String firstName, String lastName,
                                      String middleName, String emailid,
-                                     String gender, Integer age) {
+                                     String gender, Integer age,
+                                     Set<AddressInfo> addresses,
+                                     Set<BankMembership> bankMembershipDtls) {
             this.age= age;
             this.emailid = emailid;
             this.firstName = firstName;
@@ -28,6 +46,8 @@ public class personal_personalinfo {
             this.middleName = middleName;
             this.lastName = lastName;
             this.gender = gender;
+            this.addresses = addresses;
+            this.bankMembershipDtls = bankMembershipDtls;
         }
 
         protected personal_personalinfo() {
@@ -89,10 +109,37 @@ public class personal_personalinfo {
         this.gender = gender;
     }
 
-        @Override
+        public Set<AddressInfo> getAddresses() {
+            return addresses;
+        }
+
+        public void setAddresses(Set<AddressInfo> addresses) {
+            this.addresses = addresses;
+        }
+
+        public ArrayList getBankMembershipDtls() {
+            HashMap bankdetails = null;
+            ArrayList bankmembership = new ArrayList();
+            int counter = 0;
+            for ( BankMembership bank : bankMembershipDtls  ) {
+                bankdetails = new HashMap();
+                bankdetails.put("bankid", bank.getBankInfo().getId());
+                bankdetails.put("acctType", bank.getAcctType());
+                bankdetails.put("bankName", bank.getBankInfo().getName());
+                bankdetails.put("branchName", bank.getBankInfo().getBranch());
+                bankmembership.add(counter++, bankdetails);
+            }
+          return bankmembership;
+        }
+
+        public void setBankMembershipDtls(Set<BankMembership> bankMembershipDtls) {
+            this.bankMembershipDtls = bankMembershipDtls;
+        }
+
+/*        @Override
         public String toString() {
-            return
-                    "{"+
+            String  result =
+                    "PersonalInfo={"+
                             "id=" + getId() +
                             ", firstName='"+ getFirstName()+'\''+
                             ", middleName='" + getMiddleName()+'\''+
@@ -101,5 +148,21 @@ public class personal_personalinfo {
                             ", gender='" + getGender()+'\''+
                             ", age='" + getAge()+
                     '}';
+
+            if (addresses != null) {
+                for (AddressInfo addressInfo : addresses) {
+                    result += "Address={"+
+                            "address_type='"+ addressInfo.getAddress_type()+'\''+
+                            ",door='"+ addressInfo.getDoor()+'\''+
+                            ",street='"+addressInfo.getStreet()+'\''+
+                            ",city='"+addressInfo.getCity()+'\''+
+                            ",country='"+addressInfo.getCountry()+'\''+
+                            ",state='"+addressInfo.getState()+'\''+
+                            ",pin='"+addressInfo.getPin()+
+                            '}';
+                }
+            }
+            return result;
         }
+        */
 }
